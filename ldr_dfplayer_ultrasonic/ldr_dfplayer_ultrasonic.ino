@@ -5,6 +5,14 @@
 long duration; // variable for the duration of sound wave travel
 int distance; // variable for the distance measurement
 
+#include <TinyGPS++.h>
+TinyGPSPlus gps;
+
+#include <SoftwareSerial.h>
+#define MYPORT_TX 12
+#define MYPORT_RX 13
+SoftwareSerial gpsSerial;
+
 #include "Arduino.h"
 #include "DFRobotDFPlayerMini.h"
 
@@ -16,6 +24,7 @@ long timer1,timer2;
 
 void setup()
 {
+  gpsSerial.begin(9600, SWSERIAL_8N1, MYPORT_RX, MYPORT_TX, false);
   mySerial.begin(9600,SERIAL_8N1,16,17);
   Serial.begin(115200);
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an OUTPUT
@@ -43,6 +52,7 @@ void setup()
 
 void loop()
 {
+  gps_connect();
   timer2=millis();
   int light;
   
@@ -55,7 +65,7 @@ void loop()
     Serial.println("dark");
     myDFPlayer.play(2);
     // digitalWrite(buzz,HIGH);
-    // delay(2000);
+    delay(2000);
     // digitalWrite(buzz,LOW);
 
     }
@@ -99,6 +109,31 @@ int get_distance(){
   // Serial.print(dis);
   // Serial.println(" cm");
   return dis;
+}
+void gps_connect()
+{
+  boolean newData = false;
+  // for (unsigned long start = millis(); millis() - start < 2000;)
+  // {
+    while (gpsSerial.available())
+    {
+      if (gps.encode(gpsSerial.read()))
+      {
+
+        newData = true;
+      }
+    }
+  // }
+  if (newData)   
+  {
+    unsigned long age;
+    Serial.print("Latitude= ");
+    Serial.print(gps.location.lat(), 6);
+    Serial.print(" Longitude= ");
+    Serial.println(gps.location.lng(), 6);
+    newData = false;
+
+  }
 }
 
 
